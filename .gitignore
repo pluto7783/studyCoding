@@ -36,7 +36,7 @@ local.properties
 .buildpath
 
 # sbteclipse plugin
-.target
+/target/
 
 # Tern plugin
 .tern-project
@@ -69,3 +69,4 @@ local.properties
 .apt_generated
 
 .sts4-cache/
+WebContent/META-INF/MANIFEST.MF
