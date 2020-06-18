@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<title>인강 아닌 영화로 영어공부하는 공부법 '눈길'</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta property="og:url" content="https://www.coresoundenglish.com/">
+<meta property="og:image" content="https://images.dable.io/ad/thumbnails/nxvpNW0nOHQW_2x_1543824371">
+<meta property="og:type" content="article">
+<meta property="og:title" content="인강 아닌 영화로 영어공부하는 공부법 '눈길'">
+<meta property="og:description" content="          유명 영어 유튜버들이 극찬한 코어소리영어의 학습법이 화제이다.    복서출신 고교자퇴생 코어소리영어 신왕국 선생님은 20살에 처음 영어공부를 시작하여 미국 명문대학교 UC버클리에 합격하였다. 영어 공부를 시작하면서 소설 읽기, 패턴 암기, 어순 훈련 등 다들 최고라고 주장하는 학습법으로 공부를 하였지만 그 어떤 방법도 실력향상에 도움이 되">
+    
+<style type="text/css">
+body {
+	margin:0;
+}
+.content-body {
+	width: 100%;
+}
+.top {
+	width: 1144px;
+	margin: 0 auto;
+}
+.middle {
+	width: 1144px;
+	margin: 0 auto;
+	position: relative;
+    top: -6px;
+    z-index: 1;
+}
+.bottom {
+	width: 1144px;
+	margin: 0 auto;
+	position: relative;
+    top: -12px;
+}
+.dateText {
+	position: absolute;
+    color: white;
+    z-index: 10;
+    font-size: 52px;
+    left: 339px;
+    top: 1049px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+ul {
+	padding : 0;
+	list-style: none;
+	position: absolute;
+	top : 917px;
+	left : 200px;
+}
+li {
+	float: left;
+}
+</style>
+<script src="https://code.jquery.com/jquery-3.3.1.js"
+  integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+  crossorigin="anonymous"></script>
+</head>
+<body>
+<div class ="content-body">
+	<div class="top">
+		<img src="./top.jpg">
+		<span class="dateText"></span>
+	</div>
+	<div class="middle">
+		<img src="./middle.jpg">
+		<div class="snsBtn">
+			<ul>
+				<li><img src="./naver.png"></li>
+				<li><img src="./kakao.png"></li>
+				<li><img src="./face.png"></li>
+			</ul>
+		</div>
+	</div>
+	<div class="bottom">
+		<img src="./bottom.jpg">
+	</div>
+</div>
+<script type="text/javascript">
+$(function(){
+	var today = new Date();
+	var mon = today.getMonth()+1;
+	var date = today.getDate();
+	var day = today.getDay();
+	var week = new Array('일', '월', '화', '수', '목', '금', '토');
+	
+	var str = "12월3일(월)~"+mon+"월"+date+"일("+week[day]+")까지";
+		
+	$(".dateText").html(str);
+	setTextPosi();
+	$(window).resize(function(){
+		setTextPosi();
+	});
+	
+});
+
+function setTextPosi(){
+	if($(window).width()>1144){
+		$(".dateText").css("left",($(window).width()-$(".dateText").width())/2);
+	} else {
+		$(".dateText").css("left","216px");
+	}
+	if($(window).width()>1144){
+		$(".dateText").css("left",($(window).width()-$(".dateText").width())/2);
+	} else {
+		$(".dateText").css("left","216px");
+	}
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+    "name": "chrome-basic-extension",
+    "version": "0.0.1",
+    "manifest_version": 2,
+    "description": "다목적 툴",
+    "background": {
+        "scripts": [
+            "background.js"
+        ],
+        "persistent": true
+    },
+    "browser_action": {
+    	"default_popup": "popup.html",
+        "default_icon": "iconoff.png"
+    },
+    "content_scripts": [
+	    {
+	      "matches": ["http://*/*","https://*/*"],
+	      "js": ["js/jquery-3.4.1.min.js","js/inject.js","content/remocon/remocon.js"]
+	    },
+	    {
+	      "matches": ["https://okky.kr/*"],
+	      "js": ["content/okky/okky.js"]
+	    }
+  	],
+    "permissions": [
+        "<all_urls>",
+        "tabs"
+    ]
+}

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+.content>div {
+	width: 250px;
+}
+.content {
+	display: flex;
+}
+</style>
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script>
+$(function() {
+	$("button").on("click",function(){
+		var player1 = checkPlayer($("#player1").val());	
+		var player2 = checkPlayer($("#player2").val());		
+		
+		if(player1&&player2&&player1 !== player2){
+			if(this.id === "repeat_btn"){
+				repeatVersus(player1,player2,$("#repeat_num").val());
+			}
+			if(this.id === "simul_btn"){
+				resetGame(player1,player2);
+				simulVersus(player1,player2,$("#simul_speed").val());
+			}
+		}
+		else {
+			alert("같은 선수는 실행할수 없습니다.")
+		}
+	});
+	
+	$("#player1").val("moonsic");			//default setting
+	$("#player2").val("thiff");
+	$("#simul_speed").val("250");
+});
+
+function checkPlayer(player){
+	switch(player){
+		case "bronya" :
+			return bronya;
+		case "rillia" :
+			return rillia;
+		case "moonsic" :
+			return moonsic;
+		case "thiff" :
+			return thiff;
+	}
+	alert("선수를 다시 선택해주세요")
+	return false;
+}
+//speed (1:매우 느림, 4:빠름,5:매우빠름) *상대비교로 높으면 선공, 수치는 중요하지않음.
+var Valkyrie = function(name, deffence, attack, speed, endCondition, passive, active) {
+	this.name = name;
+	this.atk = attack;
+	this.buffAtk = attack;		//공격시 버프적용 공격력
+	this.def = deffence;		//방어시 버프적용 방어력
+	this.buffDef = deffence;
+	this.hp = 100;
+	this.speed = speed;
+	this.checkTurn = 1;
+	this.passive = passive;		//방어때 스킬
+	this.active = active;		//공격때 스킬
+	this.specialSkill;			//반격등 특수상황
+	this.resetGame = function(){ this.hp = 100;this.checkTurn = 1;this.useSkill="";this.bufCount=0;}		//종료후 hp초기화
+	this.resetAbillity = function(){ this.buffAtk = this.atk;this.buffDef = this.def;}
+	this.win = 0;				//이긴횟수
+	this.endCondition = endCondition;		//릴리아 같이 특정 턴이오면 승리하는 조건
+	this.dDamage;
+	this.useSkill = "";
+	this.whichPlayer;
+	this.bufCount = 0;
+}
+var checkPayBack = false;
+var bronya = new Valkyrie("브로냐", 8, 26, 1,null,function evadeAttack(){ if(Math.random()<=0.15){this.buffDef = 10000;this.useSkill += "15% 회피 발동";
+													} 
+												},function lottoDeal(p2){
+													if(this.checkTurn%3 === 0){
+														this.buffAtk = Math.round(Math.random()*100)
+														this.useSkill += " 1~100pt 대포스킬";
+														if(p2.buffDef<10000) p2.buffDef = 0;		//무적이나 회피 상황일때는 제외
+													}
+													this.checkTurn++;
+												});
+
+var rillia = new Valkyrie("릴리아", 11, 20, 4,8,function reflectDamage(p2){
+													if(Math.random()<=0.15){
+														this.useSkill += "데미지 반사 스킬 발동";
+														checkPayBack = true;
+														p2.specialSkill = function(p1){
+															var damage = p2.buffAtk-p1.buffDef;
+															p2.hp -= damage;
+															p2.dDamage = damage;
+														}
+													}
+												},function active(){});
+												
+var thiff = new Valkyrie("괴도", 6, 26, 5,null,function weakness(p2){
+													if(this.bufCount === 3){
+														this.bufCount = 0;
+													}
+													if(this.bufCount >= 1){
+														p2.buffAtk -= 15;
+														this.bufCount++;
+													}
+												},function justDeath(){
+													if(Math.random()<=0.05){
+														this.useSkill += "즉사 스킬 발동";
+														this.buffAtk = 10000;
+													}
+													if(Math.random()<=0.30){
+														this.useSkill += "약화스킬 발동";
+														this.bufCount = 1;
+													}
+												});
+												
+var moonsic = new Valkyrie("월식", 10, 24, 1,null,function powerUp(p2){
+													if(this.hp<=40){
+														this.useSkill += "공/방 50% 증가";
+														this.buffAtk = this.atk*1.5
+														this.buffDef = this.def*1.5
+													}
+												},function active(p2){
+													if(this.hp<=40){
+														this.useSkill += "공/방 50% 증가";
+														this.buffAtk = this.atk*1.5
+														this.buffDef = this.def*1.5
+													}
+													if(this.bufCount === 0){
+														if(Math.random()<=0.30){
+															this.buffAtk = 0;
+															p2.buffDef = 0;
+															this.useSkill += "30% 원소딜 다음턴에 2배";
+															this.bufCount = 1;
+														}
+													}else if (this.bufCount === 1){
+														this.useSkill += "원소딜 2배 발동";
+														this.buffAtk *= 2;
+														p2.buffDef = 0;
+														this.bufCount = 0;
+													}
+												});
+												
+function resetGame(player1,player2){
+	player1.hp = 100;
+	player2.hp = 100;
+	$(".player1_skill").text("");
+	$(".player1_damaged").text("");
+	$(".player1_hp").text("100");
+	$(".player2_skill").text("");
+	$(".player2_damaged").text("");
+	$(".player2_hp").text("100");
+	$("#result_input").val("");
+	$("#history").html("");
+}			
+												
+function atk(p1, p2) {		//p1이 공격, p2가 방어
+	if(checkPayBack) checkPayBack = false;
+	p2.passive(p1);		//방어자 passive
+	p1.active(p2);		//공격자 active
+	
+	var damage = (p2.buffDef === 10000)? 0 : p1.buffAtk - p2.buffDef; 
+	if(checkPayBack){		//반격 or 특수스킬
+		p1.specialSkill(p2);
+	}else{
+		p2.hp -= damage;		//일반 공격
+		p2.dDamage = damage;
+	}
+	p1.resetAbillity();
+	p2.resetAbillity();
+}												
+												
+function simulVersus(player1, player2,time) {		//자동전투 많은 표본 얻기용
+	var firstAttack = whoFirst(player1, player2); //순서정하기
+	var p1 = (firstAttack) ? player1 : player2;
+	var p2 = (firstAttack) ? player2 : player1;
+	if(firstAttack){
+		p1.whichPlayer = "player1";
+		p2.whichPlayer = "player2";
+	} else{
+		p1.whichPlayer = "player2";
+		p2.whichPlayer = "player1";
+	}
+	var i = 0;
+	var atker;
+	var interval = setInterval(function(){
+		i++;
+		var turn = Math.ceil(i/2);
+		
+		if(p1.endCondition === turn){
+			$("#result_input").val(p1.name + " WIN")
+			p1.resetGame();p2.resetGame();
+			clearInterval(interval);
+			return;
+		}
+		if(p2.endCondition === turn){
+			$("#result_input").val(p2.name + " WIN")
+			p1.resetGame();p2.resetGame();
+			clearInterval(interval);
+			return;
+		}
+		$("#history").html($("#history").html()+"======="+turn+"턴 ======= <br/>");
+		
+		var whoPhase = (i%2 === 1); 	//true 면 p1, false 면 p2
+		(whoPhase)? atk(p1,p2):atk(p2,p1);	//공격 순서
+		
+		if(whoPhase){	//true p1공격
+			if(checkPayBack){	//반격
+				$("."+p1.whichPlayer+"_hp").text(p1.hp);
+				$("."+p1.whichPlayer+"_damaged").text(p1.dDamage);
+			} else{
+				$("#history").html($("#history").html()+p1.name+" 공격:"+p2.dDamage+" 만큼 피해.("+p1.name+"hp:"+p1.hp+",skill:"+p1.useSkill+")("+p2.name+"hp:"+p2.hp+",skill:"+p2.useSkill+") <br/>");
+				$("."+p2.whichPlayer+"_hp").text(p2.hp);
+				$("."+p2.whichPlayer+"_damaged").text(p2.dDamage);
+			}
+			$("."+p2.whichPlayer+"_skill").text(p2.useSkill);
+			$("."+p1.whichPlayer+"_skill").text(p1.useSkill);
+			p1.useSkill = "";
+			p2.useSkill = "";
+		} 
+		else {
+			if(checkPayBack){	//반격
+				$("."+p2.whichPlayer+"_hp").text(p2.hp);
+				$("."+p2.whichPlayer+"_damaged").text(p2.dDamage);
+			} else{
+				$("#history").html($("#history").html()+p2.name+" 공격:"+p1.dDamage+" 만큼 피해.("+p1.name+"hp:"+p1.hp+",skill:"+p1.useSkill+")("+p2.name+"hp:"+p2.hp+",skill:"+p2.useSkill+") <br/>");
+				$("."+p1.whichPlayer+"_hp").text(p1.hp);
+				$("."+p1.whichPlayer+"_damaged").text(p1.dDamage);
+			}
+			$("."+p2.whichPlayer+"_skill").text(p2.useSkill);
+			$("."+p1.whichPlayer+"_skill").text(p1.useSkill);
+			p1.useSkill = "";
+			p2.useSkill = "";
+		}
+		
+		if (p2.hp<=0) {
+			$("#result_input").val(p1.name + " WIN")
+			p1.resetGame();p2.resetGame();
+			clearInterval(interval);
+			return;
+		}
+		if (p1.hp<=0) {
+			$("#result_input").val(p2.name + " WIN")
+			p1.resetGame();p2.resetGame();
+			clearInterval(interval);
+			return;
+		}
+			
+	} , time);
+}
+
+function fight(player1, player2) {		//자동전투 많은 표본 얻기용
+	var firstAttack = whoFirst(player1, player2); //순서정하기
+	var p1 = (firstAttack) ? player1 : player2;
+	var p2 = (firstAttack) ? player2 : player1;
+	var i = 0;
+	while (i < 30) {
+		i++;
+		var turn = Math.ceil(i/2);
+		
+		if(p1.endCondition === turn){
+			p1.win++;
+			break;
+		}
+		if(p2.endCondition === turn){
+			p2.win++;
+			break;
+		}
+		
+		var whoPhase = (i%2 === 1); 	//true 면 p1, false 면 p2
+		(whoPhase)? atk(p1,p2):atk(p2,p1);	//공격 순서
+		
+		if (p2.hp<=0) {
+			p1.win++;
+			break;
+		}
+		if (p1.hp<=0) {
+			p2.win++;
+			break;
+		}
+	}
+	p1.resetGame();p2.resetGame();		//player 초기화
+}
+
+function checkHp(player) {
+	if (player.hp <= 0)
+		return true;
+	return false;
+}
+function resetHp(p1, p2) {
+	p1.hp = 100;
+	p2.hp = 100;
+}
+
+function whoFirst(player1, player2) { // true 면 순서대로 false면 선공 반대로
+	if (player1.speed < player2.speed)
+		return false;
+	return true;
+}
+
+function repeatVersus(p1,p2,num){
+	if(!(num>0)){		//숫자입력만 체크
+		alert("반복횟수를 설정해주세요.")
+		return;
+	}
+	p1.win = 0;p2.win = 0;
+	p1.resetGame();p2.resetGame();		//초기화
+	for(var i = 0; i<num; i++){
+		fight(p1,p2);
+	}
+	$("#result_text").html(p1.name +" : "+p1.win+" 승, 승률 : "+(p1.win/num*100).toFixed(2)+"</br>"+p2.name +" : "+p2.win+" 승, 승률 : "+(p2.win/num*100).toFixed(2));
+	p1.win = 0;
+	p2.win = 0;
+}
+
+</script>
+</head>
+<body>
+	<div class="content">
+		<div>
+			<div>
+				스킬사용:<span class="player1_skill"></span><br/>
+				받은데미지:<span class="player1_damaged">0</span><br/>
+				HP:<span class="player1_hp">100</span>
+			</div>
+			<select id="player1">
+				<option value="">=선수선택=</option>
+				<option value="bronya">브로냐</option>
+				<option value="rillia">릴리아</option>
+				<option value="moonsic">월식</option>
+				<option value="thiff">괴도</option>
+			</select>
+		</div>
+		<div>
+			<div>
+				스킬사용:<span class="player2_skill"></span><br/>
+				받은데미지:<span class="player2_damaged">0</span><br/>
+				HP:<span class="player2_hp">100</span>
+			</div>
+			<select id="player2">
+				<option value="">=선수선택=</option>
+				<option value="bronya">브로냐</option>
+				<option value="rillia">릴리아</option>
+				<option value="moonsic">월식</option>
+				<option value="thiff">괴도</option>
+			</select>
+		</div>
+	</div>
+	<br/>
+	<div>
+		<input type="text" id="result_input" readOnly="readOnly"/><br/>
+		<button id="simul_btn">시뮬레이터 START</button>
+		<select id="simul_speed">
+			<option value="250">매우빠름</option>
+			<option value="500">빠름</option>
+			<option value="1000">보통</option>
+			<option value="3000">느림</option>
+			<option value="5000">매우느림</option>
+		</select>
+	</div>
+	<br/>
+	<div>	
+		<input type="text" id="repeat_num">
+		<button id="repeat_btn">실행</button>
+	</div>
+	<div>
+		<span id="result_text"></span>
+	</div>
+	<div>
+		<div id="history"></div>
+	</div>
+</body>
+</html>
