@@ -69,7 +69,3 @@ local.properties
 .apt_generated
 
 .sts4-cache/
-
-# End of https://www.toptal.com/developers/gitignore/api/eclipse
-infiCod/target/m2e-wtp/web-resources/META-INF/MANIFEST.MF
-infiCod/workspace/infiCod/target/m2e-wtp/web-resources/META-INF/MANIFEST.MF
