@@ -1,3 +1,3 @@
 # studyCoding
 
-start with git
+STUDY BY GIT
